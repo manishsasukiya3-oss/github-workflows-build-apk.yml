@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles and group assignments",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "groupIds": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["active", "deactivated"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "email", "role", "groupIds"]
+    },
+    "groups": {
+      "title": "Groups",
+      "description": "Study groups and classes",
+      "type": "object",
+      "properties": {
+        "groupId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "name"]
+    },
+    "pdfs": {
+      "title": "PDFs",
+      "description": "Study PDFs and material",
+      "type": "object",
+      "properties": {
+        "pdfId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "storagePath": { "type": "string" },
+        "storageUrl": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileSize": { "type": "number" },
+        "groupIds": { "type": "array", "items": { "type": "string" } },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["pdfId", "title", "storageUrl", "groupIds"]
+    },
+    "tests": {
+      "title": "Tests",
+      "description": "MCQ Examination Tests",
+      "type": "object",
+      "properties": {
+        "testId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "duration": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "groupIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "question": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctAnswer": { "type": "number" },
+              "explanation": { "type": "string" },
+              "marks": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["testId", "title", "duration", "groupIds", "questions"]
+    },
+    "results": {
+      "title": "Results",
+      "description": "Completed test submissions and scores",
+      "type": "object",
+      "properties": {
+        "resultId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "testId": { "type": "string" },
+        "testTitle": { "type": "string" },
+        "groupIds": { "type": "array", "items": { "type": "string" } },
+        "score": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "percentage": { "type": "number" },
+        "correct": { "type": "number" },
+        "wrong": { "type": "number" },
+        "unanswered": { "type": "number" },
+        "completionTimeSeconds": { "type": "number" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["resultId", "userId", "testId", "score", "percentage", "submittedAt"]
+    }
+  }
+}

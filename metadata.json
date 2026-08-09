@@ -1,0 +1,12 @@
+{
+  "name": "Mojilo Manish App",
+  "description": "ગુજરાતી સ્પર્ધાત્મક પરીક્ષા તૈયારી, પીડીએફ અને લાઈવ ઓનલાઈન એમસીક્યુ ટેસ્ટ સિરીઝ એપ",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

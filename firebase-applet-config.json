@@ -1,0 +1,8 @@
+{
+  "apiKey": "AIzaSyDemoKey123456789",
+  "authDomain": "applet-demo.firebaseapp.com",
+  "projectId": "applet-demo",
+  "storageBucket": "applet-demo.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abcdef"
+}
