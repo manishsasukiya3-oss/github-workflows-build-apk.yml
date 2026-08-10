@@ -96,6 +96,15 @@ export const ApkBuildGuideModal: React.FC<ApkBuildGuideModalProps> = ({ isOpen, 
             <Terminal className="w-4 h-4 text-indigo-400" /> Terminal Commands
           </h4>
 
+          <div className="bg-slate-950 border border-amber-500/30 rounded-2xl p-4 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-bold text-amber-300">
+              <PackageCheck className="w-4 h-4 text-amber-400" /> ⚡ Automatic GitHub Actions APK Build
+            </div>
+            <p className="text-slate-300">
+              તમારા GitHub રેપોઝિટરીમાં <code className="text-indigo-300 font-mono">/.github/workflows/build-apk.yml</code> ઓટોમેટિક વર્કફ્લો ઉમેરેલ છે. જ્યારે તમે GitHub પર કોડ Push કરશો ત્યારે GitHub Actions આપમેળે APK બિલ્ડ કરીને Artifacts માં આપી દેશે.
+            </p>
+          </div>
+
           <div className="space-y-3">
             {steps.map((s, idx) => (
               <div key={idx} className="bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 space-y-2">

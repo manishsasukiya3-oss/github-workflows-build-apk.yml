@@ -13,9 +13,9 @@ import {
   onSnapshot, 
   query, 
   where 
-} from './lib/firebase';
+} from './lib/db';
 import { UserProfile, Group, PDFItem, Test, TestResult } from './types';
-import { Navigation } from './components/Navigation';
+import { Navigation, NavTab } from './components/Navigation';
 import { NetworkStatus } from './components/NetworkStatus';
 import { SplashScreen } from './components/SplashScreen';
 import { LoginModal } from './components/LoginModal';
@@ -24,6 +24,9 @@ import { TestExamView } from './components/TestExamView';
 import { AdminPanel } from './components/AdminPanel';
 import { GroupDashboardView } from './components/GroupDashboardView';
 import { ApkBuildGuideModal } from './components/ApkBuildGuideModal';
+import { BookmarksView } from './components/BookmarksView';
+import { LeaderboardView } from './components/LeaderboardView';
+import { FlashcardsView } from './components/FlashcardsView';
 import { MOJILO_MANISH_LOGO, APP_NAME, APP_PACKAGE_ID } from './assets/logo';
 
 import { 
@@ -41,17 +44,23 @@ import {
   Search, 
   Smartphone, 
   LogOut, 
-  Globe
+  Globe,
+  Bookmark,
+  Sparkles,
+  Trophy,
+  Sun,
+  Moon,
+  Type
 } from 'lucide-react';
 
 function AppContent() {
   const { user, userProfile, loading, logout, selectedGroupId } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
-  // Navigation tab: 'home' | 'groups' | 'pdfs' | 'tests' | 'results' | 'profile' | 'admin'
-  const [activeTab, setActiveTab] = useState<'home' | 'groups' | 'pdfs' | 'tests' | 'results' | 'profile' | 'admin'>('home');
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<NavTab>('home');
 
-  // Real Firestore Collections
+  // Real Collections
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [pdfs, setPdfs] = useState<PDFItem[]>([]);
@@ -68,6 +77,61 @@ function AppContent() {
   // Search queries
   const [pdfSearch, setPdfSearch] = useState('');
   const [testSearch, setTestSearch] = useState('');
+
+  // Local Storage Bookmarks
+  const [bookmarkedPdfIds, setBookmarkedPdfIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_bookmarked_pdfs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [bookmarkedTestIds, setBookmarkedTestIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_bookmarked_tests');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Customizer: Font size & Light/Dark Theme
+  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(() => {
+    return (localStorage.getItem('app_font_size') as any) || 'normal';
+  });
+
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('app_theme') !== 'light';
+  });
+
+  const togglePdfBookmark = (pdfId: string) => {
+    setBookmarkedPdfIds((prev) => {
+      const next = prev.includes(pdfId) ? prev.filter((id) => id !== pdfId) : [...prev, pdfId];
+      localStorage.setItem('app_bookmarked_pdfs', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleTestBookmark = (testId: string) => {
+    setBookmarkedTestIds((prev) => {
+      const next = prev.includes(testId) ? prev.filter((id) => id !== testId) : [...prev, testId];
+      localStorage.setItem('app_bookmarked_tests', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const changeFontSize = (size: 'normal' | 'large' | 'xlarge') => {
+    setFontSize(size);
+    localStorage.setItem('app_font_size', size);
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = !isDarkMode;
+    setIsDarkMode(nextTheme);
+    localStorage.setItem('app_theme', nextTheme ? 'dark' : 'light');
+  };
 
   // 1. Subscribe to Firestore Collections when user is authenticated
   useEffect(() => {
@@ -314,6 +378,7 @@ function AppContent() {
         }}
         userGroups={myGroupObjects}
         onOpenApkGuide={() => setShowApkGuide(true)}
+        bookmarkedCount={bookmarkedPdfIds.length + bookmarkedTestIds.length}
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
@@ -549,29 +614,46 @@ function AppContent() {
                       No PDFs found for your assigned groups.
                     </div>
                   ) : (
-                    accessiblePdfs.map((pdf) => (
-                      <div
-                        key={pdf.pdfId}
-                        className="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xl transition"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                            <FileText className="w-5 h-5" />
+                    accessiblePdfs.map((pdf) => {
+                      const isBookmarked = bookmarkedPdfIds.includes(pdf.pdfId);
+                      return (
+                        <div
+                          key={pdf.pdfId}
+                          className="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xl transition"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="truncate">
+                              <h4 className="font-bold text-sm text-white truncate">{pdf.title}</h4>
+                              <p className="text-xs text-slate-400 truncate">{pdf.description || 'Study document'}</p>
+                            </div>
                           </div>
-                          <div className="truncate">
-                            <h4 className="font-bold text-sm text-white truncate">{pdf.title}</h4>
-                            <p className="text-xs text-slate-400 truncate">{pdf.description || 'Study document'}</p>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => togglePdfBookmark(pdf.pdfId)}
+                              title={isBookmarked ? 'બુકમાર્કમાંથી દૂર કરો' : 'બુકમાર્ક કરો'}
+                              className={`p-2 rounded-xl border transition ${
+                                isBookmarked
+                                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                              }`}
+                            >
+                              <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                            </button>
+
+                            <button
+                              onClick={() => setActivePdf(pdf)}
+                              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" /> Read
+                            </button>
                           </div>
                         </div>
-
-                        <button
-                          onClick={() => setActivePdf(pdf)}
-                          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow shrink-0 flex items-center gap-1"
-                        >
-                          <BookOpen className="w-3.5 h-3.5" /> Read
-                        </button>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -606,6 +688,7 @@ function AppContent() {
                   ) : (
                     accessibleTests.map((test) => {
                       const myPrevResult = myResults.find((r) => r.testId === test.testId);
+                      const isBookmarked = bookmarkedTestIds.includes(test.testId);
 
                       return (
                         <div
@@ -620,11 +703,24 @@ function AppContent() {
                               <h3 className="font-bold text-base text-white mt-1">{test.title}</h3>
                               <p className="text-xs text-slate-300 line-clamp-2">{test.description}</p>
                             </div>
-                            {myPrevResult && (
-                              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
-                                {myPrevResult.percentage}%
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => toggleTestBookmark(test.testId)}
+                                title={isBookmarked ? 'બુકમાર્કમાંથી દૂર કરો' : 'બુકમાર્ક કરો'}
+                                className={`p-2 rounded-xl border transition ${
+                                  isBookmarked
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                                }`}
+                              >
+                                <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                              </button>
+                              {myPrevResult && (
+                                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold px-2.5 py-1 rounded-full">
+                                  {myPrevResult.percentage}%
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
@@ -651,7 +747,29 @@ function AppContent() {
               </div>
             )}
 
-            {/* 5. RESULTS TAB */}
+            {/* 5. BOOKMARKS TAB */}
+            {activeTab === 'bookmarks' && (
+              <BookmarksView
+                bookmarkedPdfs={accessiblePdfs.filter((p) => bookmarkedPdfIds.includes(p.pdfId))}
+                bookmarkedTests={accessibleTests.filter((t) => bookmarkedTestIds.includes(t.testId))}
+                onRemovePdfBookmark={(id) => togglePdfBookmark(id)}
+                onRemoveTestBookmark={(id) => toggleTestBookmark(id)}
+                onViewPdf={(pdf) => setActivePdf(pdf)}
+                onStartTest={(test) => setActiveTest(test)}
+              />
+            )}
+
+            {/* 6. FLASHCARDS TAB */}
+            {activeTab === 'flashcards' && (
+              <FlashcardsView tests={accessibleTests} />
+            )}
+
+            {/* 7. LEADERBOARD TAB */}
+            {activeTab === 'leaderboard' && (
+              <LeaderboardView results={results} users={users} />
+            )}
+
+            {/* 8. RESULTS TAB */}
             {activeTab === 'results' && (
               <div className="space-y-6 animate-fadeIn">
                 <div>
@@ -697,7 +815,7 @@ function AppContent() {
               </div>
             )}
 
-            {/* 6. PROFILE TAB */}
+            {/* 9. PROFILE TAB */}
             {activeTab === 'profile' && (
               <div className="space-y-6 animate-fadeIn max-w-2xl mx-auto">
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
@@ -715,6 +833,61 @@ function AppContent() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 font-mono">{userProfile?.email}</p>
+                    </div>
+                  </div>
+
+                  {/* App Display Customizer: Font Size & Theme */}
+                  <div className="space-y-3 pt-3 border-t border-slate-800">
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">અક્ષરો અને થીમ સેટિંગ્સ (Display Customizer)</h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Font Size Chooser */}
+                      <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2">
+                        <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                          <Type className="w-4 h-4 text-indigo-400" />
+                          અક્ષરોની સાઇઝ (Font Size):
+                        </span>
+                        <div className="grid grid-cols-3 gap-1">
+                          <button
+                            onClick={() => changeFontSize('normal')}
+                            className={`py-1.5 text-xs font-bold rounded-xl border transition ${
+                              fontSize === 'normal' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
+                            સામાન્ય
+                          </button>
+                          <button
+                            onClick={() => changeFontSize('large')}
+                            className={`py-1.5 text-xs font-bold rounded-xl border transition ${
+                              fontSize === 'large' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
+                            મોટા
+                          </button>
+                          <button
+                            onClick={() => changeFontSize('xlarge')}
+                            className={`py-1.5 text-xs font-bold rounded-xl border transition ${
+                              fontSize === 'xlarge' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
+                            વિશાળ
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Theme Toggle */}
+                      <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2">
+                        <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                          {isDarkMode ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
+                          એપ થીમ (App Theme):
+                        </span>
+                        <button
+                          onClick={toggleTheme}
+                          className="w-full py-1.5 text-xs font-bold rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 transition flex items-center justify-center gap-2"
+                        >
+                          <span>{isDarkMode ? '🌙 ડાર્ક મોડ (સક્રિય)' : '☀️ લાઈટ મોડ (સક્રિય)'}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 

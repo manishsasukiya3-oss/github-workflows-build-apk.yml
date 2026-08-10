@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Test, TestResult } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, db } from '../lib/firebase';
+import { collection, addDoc, db } from '../lib/db';
 
 interface TestExamViewProps {
   test: Test;

@@ -37,7 +37,7 @@ import {
   ref, 
   uploadBytesResumable, 
   getDownloadURL 
-} from '../lib/firebase';
+} from '../lib/db';
 
 interface AdminPanelProps {
   users: UserProfile[];
